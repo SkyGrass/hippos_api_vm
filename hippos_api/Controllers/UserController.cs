@@ -248,6 +248,67 @@ namespace hippos_api.Controllers
         }
 
         /// <summary>
+        /// 删除 用户
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public IHttpActionResult RemoveUser(dynamic model)
+        {
+            try
+            {
+                if (model != null)
+                {
+                    string userId = model.userId ?? string.Empty;
+                    var effectRow = 0;
+                    if (!string.IsNullOrEmpty(userId))
+                    {
+                        var user = Db.Context(APP.DB_DEFAULT_CONN_NAME).Sql(
+                            string.Format(@"select * from dbo.usertab where userId='{0}'", userId))
+                            .QuerySingle<UserTab>();
+
+                        if (user != null)
+                        {
+                            if (user.username.ToLower() == "admin")
+                            {
+                                return Error("管理员禁止删除! \r\n 操作失败!");
+                            }
+                            var haveRecord = Db.Context(APP.DB_DEFAULT_CONN_NAME).Sql(string.Format(@"select top 1 * from t_order where fbiller = '{0}'", user.username)).QuerySingle<dynamic>();
+                            if (haveRecord != null)
+                            {
+                                return Error("当前用户存在订单记录 \r\n 操作失败!");
+                            }
+                            else
+                            {
+                                effectRow = Db.Context(APP.DB_DEFAULT_CONN_NAME).Delete("UserTab").Where("userId", user.userId).Execute();
+                            }
+                        }
+                        else
+                        {
+                            return Error("操作失败!");
+                        }
+                    }
+                    else
+                    {
+                        return Error("操作失败!");
+                    }
+                    if (effectRow > 0)
+                        return Success("操作成功!");
+                    else
+                        return Error("操作失败!");
+                }
+                else
+                {
+                    return Error("未能查询到用户!");
+                }
+            }
+            catch (Exception e)
+            {
+                return Exception(e.Message);
+            }
+        }
+
+        /// <summary>
         /// 初始化用户密码
         /// </summary>
         /// <param name="model"></param>
