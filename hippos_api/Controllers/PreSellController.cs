@@ -826,6 +826,8 @@ t1.fdealercode = t3.username left join v_customer t4 on t1.fcustcode  = t4.ccusc
             /// 
             /// </summary>
             public float FSum2 { get; set; }
+            public float FVolume { get; set; }
+            public float FTotalVolume { get; set; }
         }
         public class TableMaxId
         {

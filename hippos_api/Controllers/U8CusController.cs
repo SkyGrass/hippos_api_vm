@@ -115,7 +115,7 @@ namespace hippos_api.Controllers
 
                     if (!string.IsNullOrEmpty(cuscode))
                     {
-                        sqlwhere = string.Format(@"{0} and  ccuscode in (select isnull(ccuscode,'') from usertab where username ='{1}')", sqlwhere, cuscode);
+                        sqlwhere = string.Format(@"{0} and  ccuscode in (select isnull(cuscode,'') from usertab where username ='{1}')", sqlwhere, cuscode);
                     }
                 }
                 var customers = Db.Context(APP.DB_DEFAULT_CONN_NAME).Sql(sqlwhere).QueryMany<dynamic>();

