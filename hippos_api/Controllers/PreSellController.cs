@@ -134,6 +134,29 @@ t1.fdealercode = t3.username left join v_customer t4 on t1.fcustcode  = t4.ccusc
 
         }
 
+        [HttpPost]
+        public IHttpActionResult GetPreviewData(Query model)
+        {
+            try
+            {
+                var id = model.id ?? string.Empty;
+                var form = Db.Context(APP.DB_DEFAULT_CONN_NAME).Sql(string.Format(@"select * from v_Order_Preview where fid = '{0}'", id)).QuerySingle<dynamic>();
+                var list = Db.Context(APP.DB_DEFAULT_CONN_NAME).Sql(string.Format(@"select * from v_OrderList_Preview where fid= '{0}'", id)).QueryMany<dynamic>();
+                if (form != null && list != null && list.Count > 0)
+                {
+                    return Success("", new { form = form, list = list });
+                }
+                else
+                {
+                    return Error("未能查询到预订单信息!");
+                }
+            }
+            catch (Exception e)
+            {
+                return Exception("查询预订单信息失败!" + e.Message);
+            }
+        }
+
 
         [HttpPost]
         public IHttpActionResult GetPreSellForMonthInfo(Query model)
@@ -439,7 +462,7 @@ t1.fdealercode = t3.username left join v_customer t4 on t1.fcustcode  = t4.ccusc
                 if (row != null)
                 {
                     var effectRow = Db.Context(APP.DB_DEFAULT_CONN_NAME).Sql(string.Format(@"update t_order set fverifier =NULL ,fverifydate =NULL,
-                        fstatus = {1} where fid = '{0}'",  id, newstatus)).Execute();
+                        fstatus = {1} where fid = '{0}'", id, newstatus)).Execute();
 
                     if (effectRow > 0)
                     {
