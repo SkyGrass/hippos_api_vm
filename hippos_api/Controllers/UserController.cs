@@ -280,7 +280,12 @@ namespace hippos_api.Controllers
                             }
                             else
                             {
+                                if (user.role.ToLower().Equals("trader"))
+                                {
+                                    effectRow = Db.Context(APP.DB_DEFAULT_CONN_NAME).Delete("TraderCustomerMap").Where("traderusercode", user.username).Execute();
+                                }
                                 effectRow = Db.Context(APP.DB_DEFAULT_CONN_NAME).Delete("UserTab").Where("userId", user.userId).Execute();
+
                             }
                         }
                         else
