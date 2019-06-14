@@ -555,25 +555,33 @@ t1.fdealercode = t3.username left join v_customer t4 on t1.fcustcode  = t4.ccusc
                    id)).QuerySingle<dynamic>();
                 if (row != null)
                 {
-                    var WsUrl = ConfigurationManager.AppSettings["WsUrl"];
-                    var Method = ConfigurationManager.AppSettings["Method"];
-                    var args = new object[] { id, null };
-                    object result = WsHelper.InvokeWebService(WsUrl, Method, args);
-                    if (args[1] != null && (string)args[1] != "")
+                    var check = Db.Context(APP.DB_DEFAULT_CONN_NAME).Sql(string.Format(@"exec P_CheckSOIsBuild '{0}'", row.FBillNo)).QuerySingle<dynamic>();
+                    if (check != null && "N".Equals(check.FStatus))
                     {
-                        return Error(args[1].ToString());
-                    }
+                        var WsUrl = ConfigurationManager.AppSettings["WsUrl"];
+                        var Method = ConfigurationManager.AppSettings["Method"];
+                        var args = new object[] { id, null };
+                        object result = WsHelper.InvokeWebService(WsUrl, Method, args);
+                        if (args[1] != null && (string)args[1] != "")
+                        {
+                            return Error(args[1].ToString());
+                        }
 
-                    var r = Db.Context(APP.DB_DEFAULT_CONN_NAME).Sql(string.Format(@"select t1.*,t2.name as FBillerName,t3.name as FDealerName ,t4.ccusname as FCusName from t_order t1 left join usertab t2 on t1.fbiller =t2.username left outer join usertab t3 on 
+                        var r = Db.Context(APP.DB_DEFAULT_CONN_NAME).Sql(string.Format(@"select t1.*,t2.name as FBillerName,t3.name as FDealerName ,t4.ccusname as FCusName from t_order t1 left join usertab t2 on t1.fbiller =t2.username left outer join usertab t3 on 
 t1.fdealercode = t3.username left join v_customer t4 on t1.fcustcode  = t4.ccuscode  where fid = '{0}' and fstatus =2",
-                   id)).QuerySingle<Form>();
-                    if (r != null)
-                    {
-                        return Success("生单成功!", r);
+                       id)).QuerySingle<Form>();
+                        if (r != null)
+                        {
+                            return Success("生单成功!", r);
+                        }
+                        else
+                        {
+                            return Error("生单失败!");
+                        }
                     }
                     else
                     {
-                        return Error("生单失败!");
+                        return Error("订单已生单!");
                     }
                 }
                 else
@@ -586,6 +594,7 @@ t1.fdealercode = t3.username left join v_customer t4 on t1.fcustcode  = t4.ccusc
                 return Exception(e.Message);
             }
         }
+
         public List<string> BuildSql(string state, Form form, List<Item> list)
         {
             List<string> ls_sql = new List<string>();
